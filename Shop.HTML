@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Motors</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.139.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        /* ... (Your existing styles) ... */
+        .shop-header {
+            background-image: linear-gradient(to right, #000000, hsl(180, 87%, 40%));
+            color: white;
+            padding: 100px 0.2PX 30PX;
+            text-align: center;
+            position: relative;
+            overflow: auto;
+        }
+        
+        /* 3D Configurator Styles */
+        .car-configurator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: none;
+        }
+        
+        .configurator-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .configurator-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        
+        .configurator-options {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+        
+        /* Comparison Tool */
+        .comparison-tool {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 30px;
+            z-index: 100;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .comparison-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            display: none;
+            z-index: 101;
+        }
+        
+        /* Finance Calculator */
+        .calculator-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        /* Filter System */
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        /* AR Button */
+        .ar-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            display: none;
+        }
+        
+        @media (min-width: 768px) {
+            .ar-button {
+                display: block;
+            }
+        }
+        
+        /* Original Styles */
+        .car-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .car-card img {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .car-card-body {
+            padding: 15px;
+        }
+        .car-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .car-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .car-description {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        /* Dark mode styles */
+        .dark-mode {
+            background-color: #121212;
+            color: #f8f9fa;
+        }
+        .dark-mode .car-card {
+            background-color: #1e1e1e;
+            border-color: #333;
+        }
+        .dark-mode .car-description {
+            color: #ccc;
+        }
+        .dark-mode .filter-section,
+        .dark-mode .calculator-container {
+            background-color: #1e1e1e;
+            border-color: #333;
+        }
+        .dark-mode .modal-content {
+            background-color: #1e1e1e;
+            color: #f8f9fa;
+        }
+        .dark-mode .comparison-panel {
+            background-color: #2d2d2d;
+            color: #f8f9fa;
+        }
+            /* Custom Styles */
+    .navbar {
+        background-color: #f8f9fa; /* Light background for navbar */
+        font-weight: bold;
+    }
+
+    .navbar-nav {
+            margin-left: auto; /* Push navbar items to the right */
+    }
+    .navbar-brand img {
+        max-height: 50px; /* Adjust logo size */
+    }
+    .navbar-brand {
+            margin-right: auto; /* Push brand to the left */
+    }
+    .navbar-brand h1 {
+        font-weight: bold;
+        font-size: 24px;
+        margin: 0;
+        color: #078bbe;
+        margin-right: auto;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <img src="picture room/2 log.jpeg" alt="Phoenix Motors Logo" style="max-height: 50px; margin-right: 10px;">
+            <h1 class="mb-0" style="font-size: 24px;">Phoenix Motors</h1>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="inventory.html">Inventory</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Sell My Car.html">Sell My Car</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Car Leasing.html">Car Leasing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Services.html">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Blog.html">Blog</a>
+                </li>
+                <li class="nav-item" style="background-color: #0faabe;">
+                    <a class="nav-link" href="Shop.HTML">Shop</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Contact.HTML">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-link nav-link" id="darkModeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
+                <li class="nav-item Active" style="background: linear-gradient(to right, #7b00ff, #0057ee);">
+                    <a class="nav-link" href="Admin.html" style="color: white;">Admin</a>
+                </li>
+                
+                
+                <script>
+                    // Dark mode toggle
+                    document.getElementById('darkModeToggle').addEventListener('click', function() {
+                        document.body.classList.toggle('dark-mode');
+                        this.querySelector('i').classList.toggle('fa-sun');
+                    });
+                </script>
+                
+                <style>
+                    .dark-mode {
+                        background-color: #121212;
+                        color: #f8f9fa;
+                    }
+                    .dark-mode .card {
+                        background-color: #1e1e1e;
+                        color: #f8f9fa;
+                    }
+                    .dark-mode .modal-content {
+                        background-color: #1e1e1e;
+                        color: #f8f9fa;
+                    }
+                </style>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-search"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="car-configurator">
+        <div class="configurator-container">
+            <div id="shop-container" class="d-flex flex-wrap justify-content-start"></div>
+            <div class="configurator-close" id="closeConfigurator">&times;</div>
+            <canvas id="car3dViewer"></canvas>
+            <div class="configurator-options">
+                <div class="color-option" style="background-color: #ff0000;" data-color="0xff0000"></div>
+                <div class="color-option" style="background-color: #0000ff;" data-color="0x0000ff"></div>
+                <div class="color-option" style="background-color: #ffffff;" data-color="0xffffff"></div>
+                <div class="color-option" style="background-color: #000000;" data-color="0x000000"></div>
+                <div class="color-option" style="background-color: #f0f0f0;" data-color="0xf0f0f0"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-tool" id="comparisonTool">
+        <i class="fas fa-exchange-alt"></i> Compare (<span id="compareCount">0</span>/3)
+    </div>
+    
+    <div class="comparison-panel" id="comparisonPanel">
+        <h5>Compare Cars</h5>
+        <div id="comparisonItems"></div>
+        <button class="btn btn-primary btn-sm mt-2" id="compareNowBtn">Compare Now</button>
+        <button class="btn btn-outline-secondary btn-sm mt-2" id="clearCompareBtn">Clear All</button>
+    </div>
+
+    <header class="shop-header">
+        <div class="container">
+            <h1>Car Shop</h1>
+            <p>Explore Our Selection of Quality Vehicles</p>
+        </div>
+    </header>
+
+    <section class="container mt-5">
+        <div class="row" id="carContainer">
+            <div class="col-md-4">
+                <div class="car-card">
+                    <button class="btn btn-sm ar-button" onclick="showARPreview('Lamborghini Aventador')">
+                        <i class="fas fa-mobile-alt"></i> AR View
+                    </button>
+                    <img src="picture room/Lamborghini Revuelto.jpg" alt="Lamborghini Revuelto">
+                    <div class="car-card-body">
+                        <h2 class="car-title">Lamborghini Aventador</h2>
+                        <p class="car-price">$393,695</p>
+                        <p class="car-description">The Lamborghini Aventador is a high-performance sports car that boasts a powerful V12 engine, aggressive styling, and exceptional driving dynamics.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#carDetailsModal">View Details</button>
+                        <button class="btn btn-secondary" onclick="addToCart('Lamborghini Aventador', 393695)">Add to Cart</button>
+                        <button class="btn btn-outline-info btn-sm mt-2" onclick="configureCar('Lamborghini Aventador')">
+                            <i class="fas fa-cog"></i> 3D Configurator
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm mt-2 add-to-compare" data-car="Lamborghini Aventador">
+                            <i class="fas fa-exchange-alt"></i> Compare
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="car-card">
+                    <button class="btn btn-sm ar-button" onclick="showARPreview('Ford Mustang')">
+                        <i class="fas fa-mobile-alt"></i> AR View
+                    </button>
+                    <img src="picture room/ford-mustang-colombia.jpg" alt="Car 2">
+                    <div class="car-card-body">
+                        <h2 class="car-title">Ford Mustang</h2>
+                        <p class="car-price">$27,205</p>
+                        <p class="car-description">The Ford Mustang is an iconic American muscle car known for its powerful engine options, classic design, and exhilarating driving experience.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#carDetailsModal">View Details</button>
+                        <button class="btn btn-secondary" onclick="addToCart('Ford Mustang', 27205)">Add to Cart</button>
+                        <button class="btn btn-outline-info btn-sm mt-2" onclick="configureCar('Ford Mustang')">
+                            <i class="fas fa-cog"></i> 3D Configurator
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm mt-2 add-to-compare" data-car="Ford Mustang">
+                            <i class="fas fa-exchange-alt"></i> Compare
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="car-card">
+                    <button class="btn btn-sm ar-button" onclick="showARPreview('Porsche 911')">
+                        <i class="fas fa-mobile-alt"></i> AR View
+                    </button>
+                    <img src="picture room/Porsche 911.jpg" alt="Car 3">
+                    <div class="car-card-body">
+                        <h2 class="car-title">Porsche 911</h2>
+                        <p class="car-price">$101,200</p>
+                        <p class="car-description">The Porsche 911 is a legendary sports car renowned for its exceptional handling, timeless design, and exhilarating performance.</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#carDetailsModal">View Details</button>
+                        <button class="btn btn-secondary" onclick="addToCart('Porsche 911', 101200)">Add to Cart</button>
+                        <button class="btn btn-outline-info btn-sm mt-2" onclick="configureCar('Porsche 911')">
+                            <i class="fas fa-cog"></i> 3D Configurator
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm mt-2 add-to-compare" data-car="Porsche 911">
+                            <i class="fas fa-exchange-alt"></i> Compare
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator-container">
+            <h3>Finance Calculator</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="carSelect" class="form-label">Select Car</label>
+                        <select class="form-select" id="carSelect">
+                            <option value="393695">Lamborghini Aventador ($393,695)</option>
+                            <option value="27205">Ford Mustang ($27,205)</option>
+                            <option value="101200">Porsche 911 ($101,200)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="downPayment" class="form-label">Down Payment ($)</label>
+                        <input type="number" class="form-control" id="downPayment" value="10000">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="loanTerm" class="form-label">Loan Term (months)</label>
+                        <select class="form-select" id="loanTerm">
+                            <option value="24">24 months</option>
+                            <option value="36">36 months</option>
+                            <option value="48">48 months</option>
+                            <option value="60">60 months</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interestRate" class="form-label">Interest Rate (%)</label>
+                        <input type="number" class="form-control" id="interestRate" value="5.5" step="0.1">
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="calculatePayment()">Calculate Payment</button>
+            <div id="paymentResult" class="mt-3">
+                <h5>Estimated Monthly Payment: <span id="monthlyPayment">$0</span></h5>
+                <p class="text-muted">Total Interest: <span id="totalInterest">$0</span></p>
+                <p class="text-muted">Total Cost: <span id="totalCost">$0</span></p>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-8"></div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <div id="order-summary">
+                            </div>
+                        <button class="btn btn-primary w-100 mt-3" id="checkout-btn">Proceed to Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" id="carDetailsModal" tabindex="-1" aria-labelledby="carDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="carDetailsModalLabel">Car Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="carDetailsContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="comparisonModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Car Comparison</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th id="compareCar1">Car 1</th>
+                                    <th id="compareCar2">Car 2</th>
+                                    <th id="compareCar3">Car 3</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function addToCart(carName, price) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.push({ name: carName, price: price });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`${carName} has been added to your cart!`);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const container = document.getElementById('carContainer');
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <h3>Your cart is empty</h3>
+                        <a href="inventory.html" class="btn btn-primary mt-3">Browse Inventory</a>
+                    </div>`;
+                return;
+            }
+
+            cart.forEach((car, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+                col.innerHTML = `
+                    <div class="car-card">
+                        <img src="${car.img || 'picture room/default-car.jpg'}" alt="${car.name}" class="img-fluid">
+                        <div class="car-card-body">
+                            <h2 class="car-title">${car.name}</h2>
+                            <p class="car-price">${car.price}</p>
+                            <p class="car-description">Selected from Inventory</p>
+                            <button class="btn btn-danger btn-sm remove-item" data-index="${index}">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                            <a href="inventory.html" class="btn btn-secondary btn-sm mt-2">
+                                <i class="fas fa-arrow-left"></i> Back to Inventory
+                            </a>
+                            <button class="btn btn-primary btn-sm mt-2 checkout-btn">
+                                <i class="fas fa-credit-card"></i> Checkout
+                            </button>
+                        </div>
+                    </div>`;
+                container.appendChild(col);
+            });
+
+            // Remove items
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function () {
+                    const index = parseInt(this.dataset.index);
+                    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    cart.splice(index, 1);
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    location.reload();
+                });
+            });
+
+            // Optional: Checkout handler
+            document.querySelectorAll('.checkout-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    alert('Redirecting to payment gateway... (future feature)');
+                });
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // Car details data
+        const carDetails = {
+            "Lamborghini Aventador": {
+                name: "Lamborghini Aventador",
+                price: 393695,
+                description: "The Lamborghini Aventador is a high-performance sports car that boasts a powerful V12 engine, aggressive styling, and exceptional driving dynamics.",
+                image: "picture room/Lamborghini Aventador.jpg",
+                engine: "6.5L V12",
+                horsepower: "760 hp",
+                topSpeed: "220 mph",
+                acceleration: "0-60 mph in 2.9s",
+                type: "sports",
+                fuelType: "Gasoline",
+                seats: "2",
+                transmission: "7-speed automatic",
+                driveType: "All-wheel drive"
+            },
+            "Ford Mustang": {
+                name: "Ford Mustang",
+                price: 27205,
+                description: "The Ford Mustang is an iconic American muscle car known for its powerful engine options, classic design, and exhilarating driving experience.",
+                image: "picture room/Ford Mustang.jpg",
+                engine: "2.3L EcoBoost / 5.0L V8",
+                horsepower: "310 hp / 460 hp",
+                topSpeed: "155 mph / 168 mph",
+                acceleration: "0-60 mph in 4.3s (V8)",
+                type: "muscle",
+                fuelType: "Gasoline",
+                seats: "4",
+                transmission: "6-speed manual / 10-speed automatic",
+                driveType: "Rear-wheel drive"
+            },
+            "Porsche 911": {
+                name: "Porsche 911",
+                price: 101200,
+                description: "The Porsche 911 is a legendary sports car renowned for its exceptional handling, timeless design, and exhilarating performance.",
+                image: "picture room/Porsche 911.jpg",
+                engine: "3.0L Twin-Turbo Flat-6",
+                horsepower: "379 hp",
+                topSpeed: "182 mph",
+                acceleration: "0-60 mph in 4.0s",
+                type: "sports",
+                fuelType: "Gasoline",
+                seats: "4",
+                transmission: "8-speed dual-clutch",
+                driveType: "Rear-wheel drive / All-wheel drive"
+            },
+        };
+
+        // Shopping cart functionality
+        let cart = [];
+        if (localStorage.getItem('cart')) {
+            cart = JSON.parse(localStorage.getItem('cart'));
+        }
+
+        function addToCart(carName, price) {
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    cart.push({ name: carName, price: price });
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert(`${carName} has been added to your cart!`);
+}
+
+        // Car details modal
+        carDetailsModal.addEventListener('show.bs.modal', (event) => {
+    const button = event.relatedTarget;
+    const carName = button.parentElement.querySelector('.car-title').innerText;
+    const car = carDetails[carName];
+
+    const modalBody = document.getElementById('carDetailsContent');
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <img src="${car.image}" alt="${car.name}" class="img-fluid mb-3">
+            </div>
+            <div class="col-md-6">
+                <h2>${car.name}</h2>
+                <p class="car-price">$${car.price.toLocaleString()}</p>
+                <p>${car.description}</p>
+                <div class="specs mb-3">
+                    <p><strong>Engine:</strong> ${car.engine}</p>
+                    <p><strong>Horsepower:</strong> ${car.horsepower}</p>
+                    <p><strong>Top Speed:</strong> ${car.topSpeed}</p>
+                    <p><strong>Acceleration:</strong> ${car.acceleration}</p>
+                    <p><strong>Type:</strong> ${car.type}</p>
+                    <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
+                    <p><strong>Seats:</strong> ${car.seats}</p>
+                    <p><strong>Transmission:</strong> ${car.transmission}</p>
+                    <p><strong>Drive Type:</strong> ${car.driveType}</p>
+                </div>
+                <button class="btn btn-success" id="modalBuyNow">
+                    <i class="fas fa-cart-plus"></i> Buy Now
+                </button>
+            </div>
+        </div>
+    `;
+
+    // 🟢 This attaches the buy-now event to the new button
+    document.getElementById('modalBuyNow').addEventListener('click', () => {
+        addToCart(car.name, car.price);
+        $('#carDetailsModal').modal('hide'); // Close the modal after adding to cart
+    });
+});
+
+    // 🧠 Add this below the innerHTML part:
+    document.getElementById("modalBuyNow").addEventListener("click", function () {
+        addToCart(car.name, car.price);
+    });
+});
+        const carDetailsModal = document.getElementById('carDetailsModal');
+        carDetailsModal.addEventListener('show.bs.modal', (event) => {
+            const button = event.relatedTarget;
+            const carName = button.parentElement.querySelector('.car-title').innerText;
+            const car = carDetails[carName];
+
+            const modalBody = document.getElementById('carDetailsContent');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="${car.image}" alt="${car.name}" class="img-fluid mb-3">
+                    </div>
+                    <div class="col-md-6">
+                        <h2>${car.name}</h2>
+                        <p class="car-price">$${car.price.toLocaleString()}</p>
+                        <p>${car.description}</p>
+                        <div class="specs mb-3">
+                            <p><strong>Engine:</strong> ${car.engine}</p>
+                            <p><strong>Horsepower:</strong> ${car.horsepower}</p>
+                            <p><strong>Top Speed:</strong> ${car.topSpeed}</p>
+                            <p><strong>Acceleration:</strong> ${car.acceleration}</p>
+                             <p><strong>Type:</strong> ${car.type}</p>
+                            <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
+                            <p><strong>Seats:</strong> ${car.seats}</p>
+                            <p><strong>Transmission:</strong> ${car.transmission}</p>
+                            <p><strong>Drive Type:</strong> ${car.driveType}</p>
+                        </div>
+                        <button class="btn btn-success" id="modalBuyNow">
+                            <i class="fas fa-cart-plus"></i> Buy Now
+                        </button>
+                    </div>
+                </div>
+            `;
+            const modalBuyNow = document.getElementById('modalBuyNow');
+            if (modalBuyNow) { // Check if the element exists
+                modalBuyNow.addEventListener('click', () => {
+                    addToCart(car.name, car.price);
+                     $('#carDetailsModal').modal('hide');
+                });
+            }
+
+        });
+
+        // Finance calculator
+        function calculatePayment() {
+            const carPrice = parseFloat(document.getElementById('carSelect').value);
+            const downPayment = parseFloat(document.getElementById('downPayment').value);
+            const loanTerm = parseInt(document.getElementById('loanTerm').value);
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+
+            const principal = carPrice - downPayment;
+            const monthlyInterestRate = interestRate / 12;
+            const numberOfPayments = loanTerm;
+
+            if (monthlyInterestRate === 0) {
+                monthlyPayment = principal / numberOfPayments;
+            } else {
+                const numerator = principal * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments);
+                const denominator = Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1;
+                monthlyPayment = numerator / denominator;
+            }
+
+            if (isNaN(monthlyPayment)) {
+                monthlyPayment = 0;
+            }
+            const totalCost = monthlyPayment * numberOfPayments;
+            const totalInterest = totalCost - principal;
+
+            document.getElementById('monthlyPayment').innerText = '$' + monthlyPayment.toFixed(2);
+            document.getElementById('totalInterest').innerText = '$' + totalInterest.toFixed(2);
+             document.getElementById('totalCost').innerText = '$' + totalCost.toFixed(2);
+        }
+
+        // Filter system
+        const priceRange = document.getElementById('priceRange');
+        const priceRangeValue = document.getElementById('priceRangeValue');
+        const carTypeFilter = document.getElementById('carTypeFilter');
+        const sortBy = document.getElementById('sortBy');
+        const carContainer = document.getElementById('carContainer');
+        const cars = [
+            {
+                name: "Lamborghini Aventador",
+                price: 393695,
+                description: "The Lamborghini Aventador is a high-performance sports car that boasts a powerful V12 engine, aggressive styling, and exceptional driving dynamics.",
+                image: "picture room/Lamborghini Revuelto.jpg",
+                type: "sports",
+                electric: false
+            },
+            {
+                name: "Ford Mustang",
+                price: 27205,
+                description: "The Ford Mustang is an iconic American muscle car known for its powerful engine options, classic design, and exhilarating driving experience.",
+                image: "picture room/ford-mustang-colombia.jpg",
+                type: "muscle",
+                electric: false
+            },
+            {
+                name: "Porsche 911",
+                price: 101200,
+                description: "The Porsche 911 is a legendary sports car renowned for its exceptional handling, timeless design, and exhilarating performance.",
+                image: "picture room/Porsche 911.jpg",
+                type: "sports",
+                electric: false
+            },
+            {
+                name: "Tesla Model S",
+                price: 94990,
+                description: "The Tesla Model S is a high-performance electric sedan that offers impressive acceleration, a luxurious interior, and advanced technology.",
+                image: "picture room/Tesla Model S.jpg",
+                type: "luxury",
+                electric: true
+            },
+            {
+                name: "Chevrolet Corvette",
+                price: 62195,
+                description: "The Chevrolet Corvette is an American sports car known for its powerful engine, sporty handling, and iconic design.",
+                image: "picture room/Chevrolet Corvette.jpg",
+                type: "sports",
+                electric: false
+            },
+            {
+                name: "BMW i8",
+                price: 147500,
+                description: "The BMW i8 is a plug-in hybrid sports car with a futuristic design and impressive performance.",
+                image: "picture room/BMW i8.jpg",
+                type: "sports",
+                electric: true
+            },
+        ];
+
+        function displayCars(filteredCars) {
+            carContainer.innerHTML = '';
+            filteredCars.forEach(car => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                col.innerHTML = `
+                    <div class="car-card">
+                        <button class="btn btn-sm ar-button" onclick="showARPreview('${car.name}')">
+                            <i class="fas fa-mobile-alt"></i> AR View
+                        </button>
+                        <img src="${car.image}" alt="${car.name}">
+                        <div class="car-card-body">
+                            <h2 class="car-title">${car.name}</h2>
+                            <p class="car-price">$${car.price.toLocaleString()}</p>
+                            <p class="car-description">${car.description}</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#carDetailsModal">View Details</button>
+                            <button class="btn btn-secondary" onclick="addToCart('${car.name}', ${car.price})">Add to Cart</button>
+                            <button class="btn btn-outline-info btn-sm mt-2" onclick="configureCar('${car.name}')">
+                                <i class="fas fa-cog"></i> 3D Configurator
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm mt-2 add-to-compare" data-car="${car.name}">
+                                <i class="fas fa-exchange-alt"></i> Compare
+                            </button>
+                        </div>
+                    </div>
+                `;
+                carContainer.appendChild(col);
+             // Re-initialize the event listener for the car details modal
+            carDetailsModal.addEventListener('show.bs.modal', (event) => {
+                const button = event.relatedTarget;
+                const carName = button.parentElement.querySelector('.car-title').innerText;
+                const car = carDetails[carName];
+
+                const modalBody = document.getElementById('carDetailsContent');
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img src="${car.image}" alt="${car.name}" class="img-fluid mb-3">
+                        </div>
+                        <div class="col-md-6">
+                            <h2>${car.name}</h2>
+                            <p class="car-price">$${car.price.toLocaleString()}</p>
+                            <p>${car.description}</p>
+                            <div class="specs mb-3">
+                                <p><strong>Engine:</strong> ${car.engine}</p>
+                                <p><strong>Horsepower:</strong> ${car.horsepower}</p>
+                                <p><strong>Top Speed:</strong> ${car.topSpeed}</p>
+                                <p><strong>Acceleration:</strong> ${car.acceleration}</p>
+                                <p><strong>Type:</strong> ${car.type}</p>
+                                <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
+                                <p><strong>Seats:</strong> ${car.seats}</p>
+                                <p><strong>Transmission:</strong> ${car.transmission}</p>
+                                <p><strong>Drive Type:</strong> ${car.driveType}</p>
+                            </div>
+                            <button class="btn btn-success" id="modalBuyNow">
+                                <i class="fas fa-cart-plus"></i> Buy Now
+                            </button>
+                        </div>
+                    </div>
+                `;
+                  const modalBuyNow = document.getElementById('modalBuyNow');
+                    if (modalBuyNow) { // Check if the element exists
+                        modalBuyNow.addEventListener('click', () => {
+                            addToCart(car.name, car.price);
+                             $('#carDetailsModal').modal('hide');
+                        });
+                    }
+            });
+            initComparison(); // Initialize comparison feature for new cars
+        }
+
+        priceRange.addEventListener('input', () => {
+            priceRangeValue.innerText = '$' + parseInt(priceRange.value).toLocaleString();
+            filterCars();
+        });
+
+        carTypeFilter.addEventListener('change', filterCars);
+        sortBy.addEventListener('change', filterCars);
+
+        function filterCars() {
+            const maxPrice = parseInt(priceRange.value);
+            const carType = carTypeFilter.value;
+
+            let filteredCars = cars.filter(car => car.price <= maxPrice);
+
+            if (carType !== 'all') {
+                filteredCars = filteredCars.filter(car => car.type === carType);
+            }
+
+            const sortByValue = sortBy.value;
+            if (sortByValue === 'price-low') {
+                filteredCars.sort((a, b) => a.price - b.price);
+            } else if (sortByValue === 'price-high') {
+                filteredCars.sort((a, b) => b.price - a.price);
+            } else if (sortByValue === 'name-asc') {
+                filteredCars.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortByValue === 'name-desc') {
+                 filteredCars.sort((a, b) => b.name.localeCompare(a.name));
+            }
+
+            displayCars(filteredCars);
+        }
+
+        document.getElementById('filterUnder50k').addEventListener('click', () => {
+            priceRange.value = 50000;
+            priceRangeValue.innerText = '$50,000';
+            filterCars();
+        });
+
+        document.getElementById('filterElectric').addEventListener('click', () => {
+            const electricCars = cars.filter(car => car.electric);
+            displayCars(electricCars);
+        });
+
+        filterCars();
+
+        // 3D configurator
+        let scene, camera, renderer, controls;
+        let selectedCar;
+        let carModel;
+        const car3dViewer = document.getElementById('car3dViewer');
+        const configurator = document.querySelector('.car-configurator');
+        const closeConfiguratorBtn = document.getElementById('closeConfigurator');
+        const colorOptions = document.querySelectorAll('.color-option');
+
+        function configureCar(carName) {
+            selectedCar = carName;
+            configurator.style.display = 'block';
+
+            if (!scene) {
+                init3DScene();
+            } else {
+                // Clear the scene
+                while (scene.children.length > 0) {
+                    const obj = scene.children[0];
+                    scene.remove(obj);
+                }
+                //  Add the car model
+                loadCarModel(carName);
+            }
+        }
+
+        closeConfiguratorBtn.addEventListener('click', () => {
+            configurator.style.display = 'none';
+             while (scene.children.length > 0) {
+                    const obj = scene.children[0];
+                    scene.remove(obj);
+                }
+            if (renderer) {
+               renderer.dispose();
+               renderer = null;
+            }
+             scene = null;
+
+        });
+
+        function init3DScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('white');
+
+            camera = new THREE.PerspectiveCamera(75, car3dViewer.clientWidth / car3dViewer.clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 15);
+
+            renderer = new THREE.WebGLRenderer({ canvas: car3dViewer, antialias: true });
+            renderer.setSize(car3dViewer.clientWidth, car3dViewer.clientHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.rotateSpeed = 0.5;
+
+            const ambientLight = new THREE.HemisphereLight(0xffffff, 0x404040, 0.7);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            loadCarModel(selectedCar);
+            animate();
+        }
+
+        function loadCarModel(carName) {
+            let modelUrl = '';
+            switch (carName) {
+                case 'Lamborghini Aventador':
+                    modelUrl = 'https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/lamborghini_aventador_countach_lpi_800_4/model.gltf';
+                    break;
+                case 'Ford Mustang':
+                    modelUrl = 'https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/ford_mustang_shelby_gt500/model.gltf';
+                    break;
+                case 'Porsche 911':
+                    modelUrl = 'https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/porsche_911_carrera_s/model.gltf';
+                    break;
+            }
+
+            const loader = new THREE.GLTFLoader();
+            loader.load(modelUrl, (gltf) => {
+                carModel = gltf.scene;
+                carModel.scale.set(0.05, 0.05, 0.05);
+                scene.add(carModel);
+            }, undefined, (error) => {
+                console.error('Error loading model:', error);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const colorValue = parseInt(option.dataset.color);
+                if (carModel) {
+                    carModel.traverse(child => {
+                        if (child.isMesh) {
+                            child.material.color.setHex(colorValue);
+                        }
+                    });
+                }
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            if (renderer) {
+                camera.aspect = car3dViewer.clientWidth / car3dViewer.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(car3dViewer.clientWidth, car3dViewer.clientHeight);
+            }
+        });
+
+        // Comparison tool
+        let carsToCompare = [];
+        const comparisonTool = document.getElementById('comparisonTool');
+        const comparisonPanel = document.getElementById('comparisonPanel');
+        const comparisonItems = document.getElementById('comparisonItems');
+        const compareNowBtn = document.getElementById('compareNowBtn');
+        const clearCompareBtn = document.getElementById('clearCompareBtn');
+        const maxComparisonCount = 3;
+
+        function initComparison() {
+            const addToCompareButtons = document.querySelectorAll('.add-to-compare');
+            addToCompareButtons.forEach(button => {
+                button.addEventListener('click', handleAddToCompare);
+            });
+        }
+        initComparison();
+
+        function handleAddToCompare(event) {
+            const carName = event.target.dataset.car;
+
+            if (carsToCompare.length >= maxComparisonCount && !carsToCompare.includes(carName)) {
+                alert(`You can only compare up to ${maxComparisonCount} cars.`);
+                return;
+            }
+
+            if (carsToCompare.includes(carName)) {
+                carsToCompare = carsToCompare.filter(name => name !== carName);
+                event.target.classList.remove('active');
+            } else {
+                carsToCompare.push(carName);
+                event.target.classList.add('active');
+            }
+
+            updateComparisonTool();
+            updateComparisonPanel();
+        }
+
+        function updateComparisonTool() {
+            const compareCount = document.getElementById('compareCount');
+            compareCount.innerText = carsToCompare.length;
+            if (carsToCompare.length > 0) {
+                comparisonTool.classList.add('active');
+            } else {
+                comparisonTool.classList.remove('active');
+            }
+        }
+
+        function updateComparisonPanel() {
+            comparisonItems.innerHTML = '';
+            carsToCompare.forEach(carName => {
+                const item = document.createElement('div');
+item.className = 'comparison-item';
+                item.innerHTML = `<i class="fas fa-car"></i> ${carName} <span class="remove-compare" data-car="${carName}">&times;</span>`;
+                comparisonItems.appendChild(item);
+            });
+
+            if (carsToCompare.length > 0) {
+                comparisonPanel.style.display = 'block';
+            } else {
+                comparisonPanel.style.display = 'none';
+            }
+
+            document.querySelectorAll('.remove-compare').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const carName = event.target.dataset.car;
+                    carsToCompare = carsToCompare.filter(name => name !== carName);
+                    const addToCompareButtons = document.querySelectorAll('.add-to-compare');
+                    addToCompareButtons.forEach(btn => {
+                        if (btn.dataset.car === carName) {
+                            btn.classList.remove('active');
+                        }
+                    });
+                    updateComparisonTool();
+                    updateComparisonPanel();
+                });
+            });
+        }
+
+        comparisonTool.addEventListener('click', () => {
+            if (carsToCompare.length > 0) {
+                comparisonPanel.style.display = 'block';
+            }
+        });
+
+        clearCompareBtn.addEventListener('click', () => {
+            carsToCompare = [];
+            comparisonPanel.style.display = 'none';
+             const addToCompareButtons = document.querySelectorAll('.add-to-compare');
+            addToCompareButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            updateComparisonTool();
+            updateComparisonPanel();
+        });
+
+        compareNowBtn.addEventListener('click', () => {
+            if (carsToCompare.length < 2) {
+                alert('Please select at least two cars to compare.');
+                return;
+            }
+            openComparisonModal();
+        });
+
+        function openComparisonModal() {
+            const comparisonModal = new bootstrap.Modal(document.getElementById('comparisonModal'));
+            const comparisonTableBody = document.getElementById('comparisonTableBody');
+            comparisonTableBody.innerHTML = '';
+
+            document.getElementById('compareCar1').innerText = carsToCompare[0];
+            document.getElementById('compareCar2').innerText = carsToCompare[1];
+            if (carsToCompare.length > 2) {
+                document.getElementById('compareCar3').innerText = carsToCompare[2];
+            } else {
+                document.getElementById('compareCar3').innerText = '';
+            }
+
+            const features = [
+                { label: "Price", key: "price" },
+                { label: "Engine", key: "engine" },
+                { label: "Horsepower", key: "horsepower" },
+                { label: "Top Speed", key: "topSpeed" },
+                { label: "Acceleration", key: "acceleration" },
+                { label: "Type", key: "type" },
+                { label: "Fuel Type", key: "fuelType" },
+                { label: "Seats", key: "seats" },
+                { label: "Transmission", key: "transmission" },
+                { label: "Drive Type", key: "driveType" }
+            ];
+
+            features.forEach(feature => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${feature.label}</td>`;
+                carsToCompare.forEach(carName => {
+                    const car = carDetails[carName];
+                    let value = car[feature.key];
+                    if (feature.key === "price") {
+                        value = '$' + value.toLocaleString();
+                    }
+                    row.innerHTML += `<td>${value || 'N/A'}</td>`;
+                });
+                comparisonTableBody.appendChild(row);
+            });
+
+            comparisonModal.show();
+        }
+
+        // AR preview (Placeholder)
+        function showARPreview(carName) {
+            alert(`AR preview for ${carName} is not available.  This would launch a WebXR viewer.`);
+        }
+    </script>
+</body>
+</html>
